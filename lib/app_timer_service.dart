@@ -1,7 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
-import 'package:wdf/infrastructure/helper/app_logger.dart';
 
 // Timer Service
 /// This service will manage the lifecycle-aware timer.
@@ -54,12 +54,16 @@ class TimerService extends GetxService with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    AppLogger.info('AppLifecycleState changed: $state');
+    if (kDebugMode) {
+      print('AppLifecycleState changed: $state');
+    }
     if (state == AppLifecycleState.resumed) {
       // When the app comes back to the foreground, force an immediate update
       // to ensure the UI reflects the absolute latest real-world time.
       currentTime.value = DateTime.now();
-      AppLogger.info('App resumed, currentTime updated immediately.');
+      if (kDebugMode) {
+        print('App resumed, currentTime updated immediately.');
+      }
     }
     // Ticker automatically pauses/resumes with the rendering pipeline,
     // so explicit _ticker?.stop() or _ticker?.start() is not strictly needed here
@@ -75,4 +79,3 @@ class _ServiceTickerProvider implements TickerProvider {
     return Ticker(onTick);
   }
 }
-

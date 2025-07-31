@@ -1,14 +1,11 @@
-//Fixed Timer Controller
 import 'package:get/get.dart';
-import 'package:wdf/data/services/timer/app_timer_service.dart';
+import 'package:timer_service_flutter/app_timer_service.dart';
 
+//Fixed Timer Controller
 /// This controller manages the state for a single fixed-duration timer.
 class FixedTimerController extends GetxController {
   //CONSTRUCTOR
-  FixedTimerController({
-    required this.duration,
-    this.stopAt = const Duration(seconds: 1),
-  });
+  FixedTimerController({required this.duration, this.stopAt = const Duration(seconds: 1)});
 
   //VARIABLES
   final Duration duration;

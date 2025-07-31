@@ -13,7 +13,6 @@ dependencies:
   flutter:
     sdk: flutter
   get: ^4.6.5 # Replace with the latest version
-  intl: ^0.19.0 # Replace with the latest version
   timer_service_flutter: ^1.0.0 # Replace with the latest version
 ```
 
@@ -63,7 +62,6 @@ Observe `TimerService.currentTime` to calculate and display remaining time to an
 ```dart
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:timer_service_flutter/timer_service_flutter.dart';
 
 class FutureCountdownWidget extends StatelessWidget {

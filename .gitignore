@@ -146,3 +146,4 @@ coverage/
 
 # Symbols
 app.*.symbols
+pubspec.lock
