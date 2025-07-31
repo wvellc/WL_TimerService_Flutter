@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 
+export 'package:timer_service_flutter/src/extensions.dart';
+export 'package:timer_service_flutter/src/fixed_timer_controller.dart';
+
 // Timer Service
 /// This service will manage the lifecycle-aware timer.
 class TimerService extends GetxService with WidgetsBindingObserver {
@@ -65,6 +68,7 @@ class TimerService extends GetxService with WidgetsBindingObserver {
         print('App resumed, currentTime updated immediately.');
       }
     }
+    
     // Ticker automatically pauses/resumes with the rendering pipeline,
     // so explicit _ticker?.stop() or _ticker?.start() is not strictly needed here
     // for pause/resume, but it's good for immediate data refresh.
@@ -78,19 +82,4 @@ class _ServiceTickerProvider implements TickerProvider {
   Ticker createTicker(TickerCallback onTick) {
     return Ticker(onTick);
   }
-}
-
-//Extension on Duration to easily get countdown units
-extension RemainingDurationExt on Duration {
-  /// Returns the number of full days in this duration.
-  int get remainingDays => inDays;
-
-  /// Returns the number of hours remaining after accounting for full days.
-  int get remainingHours => inHours.remainder(24);
-
-  /// Returns the number of minutes remaining after accounting for full hours.
-  int get remainingMinutes => inMinutes.remainder(60);
-
-  /// Returns the number of seconds remaining after accounting for full minutes.
-  int get remainingSeconds => inSeconds.remainder(60);
 }

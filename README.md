@@ -4,7 +4,7 @@ A robust and efficient Flutter package for managing real-time, lifecycle-aware t
 
 ---
 
-## 🚀 Installation
+## Getting Started
 
 Add this to your `pubspec.yaml` file:
 
@@ -13,7 +13,9 @@ dependencies:
   flutter:
     sdk: flutter
   get: ^4.6.5 # Replace with the latest version
-  timer_service_flutter: ^1.0.0 # Replace with the latest version
+  timer_service_flutter:
+    git:
+      url: https://github.com/wvellc/WL_TimerService_Flutter.git
 ```
 
 Then, run:
@@ -21,20 +23,12 @@ Then, run:
 ```bash
 flutter pub get
 ```
+Import it:
 
+```dart
+import 'package:timer_service_flutter/timer_service_flutter.dart';
+```
 ---
-
-## 📚 Core Concepts
-
-This package provides three main components:
-
-- **TimerService**: A `GetxService` that provides a global, reactive `DateTime.now()` updated every second. It's lifecycle-aware, ensuring accuracy after app goes into background.
-- **FixedTimerController**: A `GetxController` to manage individual fixed-duration timers (e.g., a 60-second OTP countdown).
-- **DurationCountdown Extension**: An extension on `Duration` to easily extract days, hours, minutes, and seconds components.
-
----
-
-## 💡 Usage
 
 ### 1. Initialize `TimerService`
 
@@ -44,7 +38,7 @@ The `TimerService` must be initialized once at app startup in `main.dart`.
 // main.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:timer_service_flutter/timer_service_flutter.dart'; // Import your package
+import 'package:timer_service_flutter/timer_service_flutter.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,22 +54,23 @@ void main() {
 Observe `TimerService.currentTime` to calculate and display remaining time to any future `DateTime`.
 
 ```dart
-import 'package:get/get.dart';
-import 'package:flutter/material.dart';
+// service_example.dart
 import 'package:timer_service_flutter/timer_service_flutter.dart';
 
 class FutureCountdownWidget extends StatelessWidget {
   final DateTime targetDateTime;
   FutureCountdownWidget({required this.targetDateTime});
-
+  // Timer service
   final TimerService timerService = Get.find<TimerService>();
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      // Calculate remaining duration using currentTime from timer service
       final Duration remaining = targetDateTime.difference(timerService.currentTime.value);
       if (remaining.isNegative) return Text("Event Passed!");
 
+      // Extracting individual time units from the Duration
       final int days = remaining.inDaysOnly;
       final int hours = remaining.inHoursRemainder;
       final int minutes = remaining.inMinutesRemainder;
@@ -94,10 +89,11 @@ class FutureCountdownWidget extends StatelessWidget {
 Create an instance of `FixedTimerController` for each fixed timer. Use `startTimer()` and `resetTimer()` to control it.
 
 ```dart
-import 'package:flutter/material.dart';
+// fixed_timer_example.dart
 import 'package:timer_service_flutter/timer_service_flutter.dart';
 
-class OtpResendTimerWidget extends StatelessWidget {
+class FixedTimerWidget extends StatelessWidget {
+  // Fixed time controller
   final FixedTimerController controller = FixedTimerController(duration: const Duration(seconds: 60));
 
   @override
@@ -105,15 +101,19 @@ class OtpResendTimerWidget extends StatelessWidget {
     return Column(
       children: [
         Obx(() {
+          // Get remaining duration from controller
           final Duration remaining = controller.remainingDuration;
           if (controller.isFinished) return Text("OTP Ready!");
 
           return Text('Resend in ${remaining.inMinutesRemainder}:${remaining.inSecondsRemainder}');
         }),
-        Obx(() => ElevatedButton(
-              onPressed: controller.isFinished ? controller.resetTimer : null,
-              child: Text('Resend OTP'),
-            )),
+        /// Disable button click while timer is running & restart using `resetTimer()`
+        Obx(() {
+            return ElevatedButton(
+                onPressed: controller.isFinished ? controller.resetTimer : null,
+                child: Text('Resend OTP'),
+            );
+        }),
       ],
     );
   }
