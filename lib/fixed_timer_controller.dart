@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:timer_service_flutter/app_timer_service.dart';
+import 'package:timer_service_flutter/timer_service.dart';
 
 //Fixed Timer Controller
 /// This controller manages the state for a single fixed-duration timer.
