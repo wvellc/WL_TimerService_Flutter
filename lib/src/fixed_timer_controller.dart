@@ -68,7 +68,7 @@ class FixedTimerController extends GetxController {
   void resetTimer() {
     _endTime.value = null;
     _firedCompletion.value = false; // Reset completion flag
-    startTimer(); // Restart the timer
+    startTimer(onCompleted: _currentCompletionCallback); // Restart the timer
   }
 
   /// Check if the timer is currently running
