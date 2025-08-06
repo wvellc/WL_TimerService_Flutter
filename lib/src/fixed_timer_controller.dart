@@ -35,6 +35,24 @@ class FixedTimerController extends GetxController {
     return diff > stopAt ? diff : Duration.zero;
   }
 
+  //LIFECYCLE
+  @override
+  void onInit() {
+    super.onInit();
+    // Listen to changes in the underlying reactive properties (_endTime and timerService.currentTime)
+    // that affect the remainingDuration. When they change, check if the timer has completed.
+    ever(_endTime, (_) => _checkCompletion());
+    ever(timerService.currentTime, (_) => _checkCompletion());
+  }
+
+  @override
+  void onClose() {
+    _currentCompletionCallback = null;
+    _endTime.value = null;
+    _firedCompletion.value = false;
+    super.onClose();
+  }
+
   //METHODS
   /// Start the fixed timer
   /// Optionally accepts an [onCompleted] callback that will be invoked
@@ -49,7 +67,6 @@ class FixedTimerController extends GetxController {
   /// Reset the fixed timer
   void resetTimer() {
     _endTime.value = null;
-    _currentCompletionCallback = null; // Clear any active callback on reset
     _firedCompletion.value = false; // Reset completion flag
     startTimer(); // Restart the timer
   }
@@ -59,15 +76,6 @@ class FixedTimerController extends GetxController {
 
   /// Check if the timer has finished
   bool get isFinished => _endTime.value != null && remainingDuration.isNegative;
-
-  @override
-  void onInit() {
-    super.onInit();
-    // Listen to changes in the underlying reactive properties (_endTime and timerService.currentTime)
-    // that affect the remainingDuration. When they change, check if the timer has completed.
-    ever(_endTime, (_) => _checkCompletion());
-    ever(timerService.currentTime, (_) => _checkCompletion());
-  }
 
   /// Internal method to check for timer completion and trigger the registered callbacks.
   void _checkCompletion() {
