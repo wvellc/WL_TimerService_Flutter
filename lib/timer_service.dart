@@ -18,7 +18,7 @@ class TimerService extends GetxService with WidgetsBindingObserver {
   }
 
   //VARIABLES
-  final Rx<DateTime> currentTime = DateTime.timestamp().obs;
+  final Rx<DateTime> currentTime = DateTime.now().toUtc().obs;
 
   Ticker? _ticker;
   late final TickerProvider _tickerProvider;
@@ -37,7 +37,7 @@ class TimerService extends GetxService with WidgetsBindingObserver {
       // We update it only if a second has actually passed since the last known time
       // or if it's the very first tick. This prevents unnecessary updates
       // if frames are drawn more frequently than seconds change.
-      final newTime = DateTime.timestamp();
+      final newTime = DateTime.now().toUtc();
       if (newTime.second != currentTime.value.second || newTime.minute != currentTime.value.minute || newTime.hour != currentTime.value.hour) {
         currentTime.value = newTime;
       }
@@ -63,7 +63,7 @@ class TimerService extends GetxService with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       // When the app comes back to the foreground, force an immediate update
       // to ensure the UI reflects the absolute latest real-world time.
-      currentTime.value = DateTime.timestamp();
+      currentTime.value = DateTime.now().toUtc();
       if (kDebugMode) {
         print('App resumed, currentTime updated immediately.');
       }

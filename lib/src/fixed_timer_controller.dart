@@ -30,7 +30,7 @@ class FixedTimerController extends GetxController {
   //METHODS
   /// Start the fixed timer
   void startTimer() {
-    _endTime.value = DateTime.timestamp().add(duration);
+    _endTime.value = DateTime.now().toUtc().add(duration);
   }
 
   /// Reset the fixed timer
