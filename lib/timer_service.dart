@@ -63,7 +63,7 @@ class TimerService extends GetxService with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       // When the app comes back to the foreground, force an immediate update
       // to ensure the UI reflects the absolute latest real-world time.
-      currentTime.value = DateTime.now();
+      currentTime.value = DateTime.timestamp();
       if (kDebugMode) {
         print('App resumed, currentTime updated immediately.');
       }
