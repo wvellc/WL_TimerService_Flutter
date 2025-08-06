@@ -84,7 +84,7 @@ class FixedTimerController extends GetxController {
     if (_endTime.value != null && _currentCompletionCallback != null) {
       // If remainingDuration is zero or negative and the completion callback hasn't fired yet,
       // mark as completed and invoke the current callback.
-      if (remainingDuration <= Duration.zero && !_firedCompletion.value) {
+      if (remainingDuration <= stopAt && !_firedCompletion.value) {
         _firedCompletion.value = true;
         _currentCompletionCallback?.call(); // Invoke the callback
       }
