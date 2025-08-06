@@ -11,7 +11,7 @@ class FixedTimerController extends GetxController {
   final Duration duration;
   final Duration stopAt;
   // The end time of the fixed timer. Null if not started/reset.
-  final Rx<DateTime?> _endTime = Rx<DateTime?>(null);
+  final _endTime = Rxn<DateTime>(null);
 
   // Get the global TimerService instance.
   final TimerService timerService = Get.find<TimerService>();
@@ -30,7 +30,7 @@ class FixedTimerController extends GetxController {
   //METHODS
   /// Start the fixed timer
   void startTimer() {
-    _endTime.value = DateTime.now().add(duration);
+    _endTime.value = DateTime.timestamp().add(duration);
   }
 
   /// Reset the fixed timer

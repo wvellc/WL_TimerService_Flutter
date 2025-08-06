@@ -18,7 +18,7 @@ class TimerService extends GetxService with WidgetsBindingObserver {
   }
 
   //VARIABLES
-  final Rx<DateTime> currentTime = DateTime.now().obs;
+  final Rx<DateTime> currentTime = DateTime.timestamp().obs;
 
   Ticker? _ticker;
   late final TickerProvider _tickerProvider;
@@ -37,7 +37,7 @@ class TimerService extends GetxService with WidgetsBindingObserver {
       // We update it only if a second has actually passed since the last known time
       // or if it's the very first tick. This prevents unnecessary updates
       // if frames are drawn more frequently than seconds change.
-      final newTime = DateTime.now();
+      final newTime = DateTime.timestamp();
       if (newTime.second != currentTime.value.second || newTime.minute != currentTime.value.minute || newTime.hour != currentTime.value.hour) {
         currentTime.value = newTime;
       }
@@ -68,7 +68,7 @@ class TimerService extends GetxService with WidgetsBindingObserver {
         print('App resumed, currentTime updated immediately.');
       }
     }
-    
+
     // Ticker automatically pauses/resumes with the rendering pipeline,
     // so explicit _ticker?.stop() or _ticker?.start() is not strictly needed here
     // for pause/resume, but it's good for immediate data refresh.
