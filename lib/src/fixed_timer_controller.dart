@@ -12,7 +12,7 @@ class FixedTimerController extends GetxController {
   final Duration duration;
   final Duration stopAt;
   // The end time of the fixed timer. Null if not started/reset.
-  final Rx<DateTime?> _endTime = Rx<DateTime?>(null);
+  final _endTime = Rxn<DateTime>(null);
 
   // Get the global TimerService instance.
   final TimerService timerService = Get.find<TimerService>();
@@ -21,7 +21,7 @@ class FixedTimerController extends GetxController {
   VoidCallback? _currentCompletionCallback;
 
   // Internal flag to ensure the completion callback is only fired once per timer cycle.
-  final RxBool _firedCompletion = false.obs;
+  final _firedCompletion = false.obs;
 
   // Computed property for remaining duration, reactive via Obx in UI
   Duration get remainingDuration {
@@ -60,15 +60,15 @@ class FixedTimerController extends GetxController {
   void startTimer({VoidCallback? onCompleted}) {
     // Set end time using current local DateTime.
     _endTime.value = DateTime.now().add(duration);
-    _currentCompletionCallback = onCompleted; // Store the callback for this run
+    _currentCompletionCallback ??= onCompleted; // Store the callback for this run
     _firedCompletion.value = false; // Reset completion flag for a new start
   }
 
   /// Reset the fixed timer
-  void resetTimer() {
+  void resetTimer({VoidCallback? onCompleted}) {
     _endTime.value = null;
     _firedCompletion.value = false; // Reset completion flag
-    startTimer(onCompleted: _currentCompletionCallback); // Restart the timer
+    startTimer(onCompleted: onCompleted); // Restart the timer
   }
 
   /// Check if the timer is currently running
