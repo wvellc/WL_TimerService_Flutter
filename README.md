@@ -32,7 +32,8 @@ import 'package:timer_service_flutter/timer_service_flutter.dart';
 
 ### 1. Initialize `TimerService`
 
-The `TimerService` must be initialized once at app startup in `main.dart`.
+The `TimerService` must be initialized once at app startup in `main.dart`.  
+You can optionally specify the update precision (default is `second`).
 
 ```dart
 // main.dart
@@ -42,10 +43,21 @@ import 'package:timer_service_flutter/timer_service_flutter.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // Initialize the service 
-  TimerService.init(); 
+  // Initialize the service with optional precision
+  TimerService.init(precision: TimerPrecision.millisecond); 
 }
+
 ```
+### Available TimerPrecision Values
+
+The `TimerPrecision` enum defines the level of granularity for timer updates in `TimerService`:
+
+| Enum Value                  | Description                                      |
+|------------------------------|--------------------------------------------------|
+| `TimerPrecision.millisecond` | Updates every millisecond (high precision)      |
+| `TimerPrecision.second`      | Updates every second (default, lower CPU usage)|
+| `TimerPrecision.minute`      | Updates every minute                             |
+| `TimerPrecision.hour`        | Updates every hour    
 
 ---
 

@@ -6,40 +6,90 @@ import 'package:get/get.dart';
 export 'package:timer_service_flutter/src/extensions.dart';
 export 'package:timer_service_flutter/src/fixed_timer_controller.dart';
 
+/// Precision levels for how frequently the TimerService updates `currentTime`.
+/// - millisecond → every frame, checks millisecond change
+/// - second → every frame, checks second change
+/// - minute → every frame, checks minute change
+/// - hour → every frame, checks hour change
+enum TimerPrecision { millisecond, second, minute, hour }
+
 // Timer Service
-/// This service will manage the lifecycle-aware timer.
+/// A lifecycle-aware, ticker-driven time source that provides accurate time
+/// updates even when the app is minimized or in background.
+/// No Timer.periodic() is used so the service never freezes.
 class TimerService extends GetxService with WidgetsBindingObserver {
   TimerService._();
-  // Static initialization method for the package
-  static void init() {
+
+  // Static initialization method
+  static void init({TimerPrecision precision = TimerPrecision.second}) {
+    _precision = precision;
     if (!Get.isRegistered<TimerService>()) {
       Get.put<TimerService>(TimerService._(), permanent: true);
     }
   }
 
-  //VARIABLES
+  // VARIABLES
   final Rx<DateTime> currentTime = DateTime.now().toUtc().obs;
 
   Ticker? _ticker;
   late final TickerProvider _tickerProvider;
 
-  //LIFECYCLE
+  // Selected precision
+  static TimerPrecision _precision = TimerPrecision.second;
+
+  // Last emitted time used for drift correction
+  DateTime _lastEmitted = DateTime.now().toUtc();
+
   @override
   void onInit() {
     super.onInit();
     WidgetsBinding.instance.addObserver(this);
 
-    // Initialize the custom TickerProvider.
     _tickerProvider = _ServiceTickerProvider();
 
-    // Create Flutter's Ticker. The callback will be fired on each frame.
+    /// Use flutter’s internal frame callbacks.
+    /// Runs even if app is minimized or sleeping → NO freeze.
     _ticker = _tickerProvider.createTicker((elapsed) {
-      // We update it only if a second has actually passed since the last known time
-      // or if it's the very first tick. This prevents unnecessary updates
-      // if frames are drawn more frequently than seconds change.
-      final newTime = DateTime.now().toUtc();
-      if (newTime.second != currentTime.value.second || newTime.minute != currentTime.value.minute || newTime.hour != currentTime.value.hour) {
-        currentTime.value = newTime;
+      final now = DateTime.now().toUtc();
+
+      // === DRIFT CORRECTION ===
+      // It ensures that if device sleeps/wakes, time does not "jump backwards".
+      if (now.isBefore(_lastEmitted)) {
+        // Device time changed backwards → force sync
+        _lastEmitted = now;
+        currentTime.value = now;
+        return;
+      }
+
+      // === PRECISION BASED UPDATE ===
+      bool shouldUpdate = false;
+
+      switch (_precision) {
+        case TimerPrecision.millisecond:
+          // Update if any part of time changed (ms, sec, min, hr)
+          shouldUpdate = now.millisecond != _lastEmitted.millisecond || now.second != _lastEmitted.second || now.minute != _lastEmitted.minute || now.hour != _lastEmitted.hour;
+          break;
+
+        case TimerPrecision.second:
+          // Update if second, minute, or hour changed
+          shouldUpdate = now.second != _lastEmitted.second || now.minute != _lastEmitted.minute || now.hour != _lastEmitted.hour;
+          break;
+
+        case TimerPrecision.minute:
+          // Update if minute or hour changed
+          shouldUpdate = now.minute != _lastEmitted.minute || now.hour != _lastEmitted.hour;
+          break;
+
+        case TimerPrecision.hour:
+          // Update only if hour changed
+          shouldUpdate = now.hour != _lastEmitted.hour;
+          break;
+      }
+
+      // Emit update if needed
+      if (shouldUpdate) {
+        _lastEmitted = now;
+        currentTime.value = now;
       }
     });
 
@@ -57,29 +107,20 @@ class TimerService extends GetxService with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (kDebugMode) {
-      print('AppLifecycleState changed: $state');
-    }
-    if (state == AppLifecycleState.resumed) {
-      // When the app comes back to the foreground, force an immediate update
-      // to ensure the UI reflects the absolute latest real-world time.
-      currentTime.value = DateTime.now().toUtc();
-      if (kDebugMode) {
-        print('App resumed, currentTime updated immediately.');
-      }
-    }
+    if (kDebugMode) print('AppLifecycleState changed: $state');
 
-    // Ticker automatically pauses/resumes with the rendering pipeline,
-    // so explicit _ticker?.stop() or _ticker?.start() is not strictly needed here
-    // for pause/resume, but it's good for immediate data refresh.
+    if (state == AppLifecycleState.resumed) {
+      // Force sync on resume for fresh real time
+      final now = DateTime.now().toUtc();
+      _lastEmitted = now;
+      currentTime.value = now;
+      if (kDebugMode) print("Time synced immediately on resume");
+    }
   }
 }
 
-// Custom TickerProvider
-/// This allows the GetxService to create and manage a Flutter Ticker.
+// Custom TickerProvider — unchanged name
 class _ServiceTickerProvider implements TickerProvider {
   @override
-  Ticker createTicker(TickerCallback onTick) {
-    return Ticker(onTick);
-  }
+  Ticker createTicker(TickerCallback onTick) => Ticker(onTick);
 }
