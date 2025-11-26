@@ -16,6 +16,7 @@ dependencies:
   timer_service_flutter:
     git:
       url: https://github.com/wvellc/WL_TimerService_Flutter.git
+      ref: <latest-version>
 ```
 
 Then, run:
