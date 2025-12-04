@@ -58,7 +58,7 @@ class TimerServiceController extends GetxController {
   final _tickSeconds = 0.obs;
   // Optional per-second tick callback
   TimerTickCallback? _onTick;
-
+  Duration _lastRemaining = Duration.zero;
   // GETX LIFECYCLE
   @override
   void onClose() {
@@ -70,6 +70,8 @@ class TimerServiceController extends GetxController {
   // COMPUTED REMAINING TIME
   /// Dynamically determines remaining time using `_endTime` and real clock
   Duration get remainingDuration {
+    // When stopped, return last frozen remaining time
+    if (_stopped) return _lastRemaining;
     // Before timer starts, return full duration
     if (_endTime.value == null) return duration;
 
@@ -143,6 +145,8 @@ class TimerServiceController extends GetxController {
     _worker = null;
     _stopped = true;
 
+    // Capture final remaining duration before freezing
+    _lastRemaining = remainingDuration;
     if (stopWithCompletion) {
       if (!_fired) {
         _fired = true;
