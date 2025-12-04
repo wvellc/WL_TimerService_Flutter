@@ -105,17 +105,31 @@ Create an instance of `FixedTimerController` for each fixed timer. Use `startTim
 // fixed_timer_example.dart
 import 'package:timer_service_flutter/timer_service_flutter.dart';
 
-class FixedTimerWidget extends StatelessWidget {
-  // Fixed time controller
-  final FixedTimerController controller = FixedTimerController(duration: const Duration(seconds: 60));
+class FixedTimerController extends GetxController {
+    // Fixed time controller
+   final timer = TimerServiceController.init(
+      duration: Duration(seconds: 30),
+    );
 
+  @override
+  void onInit() {
+    timer.start(
+      onTick: (d) => update(), // trigger UI update
+      onCompleted: (_) => print("Completed"),
+    );
+
+    super.onInit();
+  }
+}
+
+class FixedTimerWidget extends GetView<FixedTimerController> {
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Obx(() {
           // Get remaining duration from controller
-          final Duration remaining = controller.remainingDuration;
+          final Duration remaining = controller.timer.remainingDuration;
           if (controller.isFinished) return Text("OTP Ready!");
 
           return Text('Resend in ${remaining.inMinutesRemainder}:${remaining.inSecondsRemainder}');
@@ -131,4 +145,5 @@ class FixedTimerWidget extends StatelessWidget {
     );
   }
 }
+
 ```

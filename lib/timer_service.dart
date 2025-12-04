@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 
-export 'package:timer_service_flutter/src/extensions.dart';
-export 'package:timer_service_flutter/src/fixed_timer_controller.dart';
-
 /// Precision levels for how frequently the TimerService updates `currentTime`.
 /// - millisecond → every frame, checks millisecond change
 /// - second → every frame, checks second change
@@ -36,7 +33,7 @@ class TimerService extends GetxService with WidgetsBindingObserver {
 
   // Selected precision
   static TimerPrecision _precision = TimerPrecision.second;
-
+  static TimerPrecision get currentPrecision => _precision;
   // Last emitted time used for drift correction
   DateTime _lastEmitted = DateTime.now().toUtc();
 
@@ -116,6 +113,10 @@ class TimerService extends GetxService with WidgetsBindingObserver {
       currentTime.value = now;
       if (kDebugMode) print("Time synced immediately on resume");
     }
+  }
+
+  static void setPrecision(TimerPrecision newPrecision) {
+    _precision = newPrecision;
   }
 }
 
