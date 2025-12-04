@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 
+export 'package:timer_service_flutter/src/timer_service_controller.dart';
+export 'package:timer_service_flutter/src/extensions.dart';
+
 /// Precision levels for how frequently the TimerService updates `currentTime`.
 /// - millisecond → every frame, checks millisecond change
 /// - second → every frame, checks second change
