@@ -7,7 +7,6 @@ import 'package:timer_service_flutter/timer_service.dart';
 /// - Safe lifecycle & disposable Workers
 /// - No external Get.put() required
 /// - Worker runs only when countdown is active (no resource waste)
-/// - Stop keeps time at 00 instead of jumping back to original duration
 class TimerServiceController extends GetxController {
   // PRIVATE CONSTRUCTOR
   TimerServiceController._({
@@ -71,9 +70,6 @@ class TimerServiceController extends GetxController {
   // COMPUTED REMAINING TIME
   /// Dynamically determines remaining time using `_endTime` and real clock
   Duration get remainingDuration {
-    // Keep at 00:00 once stopped
-    if (_stopped) return Duration.zero;
-
     // Before timer starts, return full duration
     if (_endTime.value == null) return duration;
 
