@@ -112,6 +112,8 @@ class TimerServiceController extends GetxController {
 
   // Pause timer (keep remaining time unchanged, but stop ticking)
   void pause() {
+    // Capture final remaining duration before freezing
+    _lastRemaining = remainingDuration;
     _worker?.dispose();
     _worker = null;
     _stopped = true; // marks non-active state
@@ -121,8 +123,8 @@ class TimerServiceController extends GetxController {
   void resume() {
     if (remainingDuration <= Duration.zero) return;
 
-    _stopped = false;
     _endTime.value = DateTime.now().toUtc().add(remainingDuration);
+    _stopped = false;
 
     _worker?.dispose();
     _worker = ever(timerService.currentTime, (_) => _tick());
