@@ -141,12 +141,13 @@ class TimerServiceController extends GetxController {
   // STOP TIMER
   /// Stop ticking and freeze display at 00
   void stop({bool stopWithCompletion = true}) {
+    // Capture final remaining duration before freezing
+    _lastRemaining = remainingDuration;
+
     _worker?.dispose();
     _worker = null;
     _stopped = true;
 
-    // Capture final remaining duration before freezing
-    _lastRemaining = remainingDuration;
     if (stopWithCompletion) {
       if (!_fired) {
         _fired = true;
