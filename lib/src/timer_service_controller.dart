@@ -43,7 +43,7 @@ class TimerServiceController extends GetxController {
   }
 
   // VARIABLES
-  final Duration duration; // total countdown length
+  Duration duration; // total countdown length (Removed 'final' to allow reset with new duration)
   final Duration stopAt; // stop threshold (if required)
   final _endTime = Rxn<DateTime>(); // when countdown finishes
   final TimerPrecision precision;
@@ -58,7 +58,7 @@ class TimerServiceController extends GetxController {
   final _tickSeconds = 0.obs;
   // Optional per-second tick callback
   TimerTickCallback? _onTick;
-
+  Duration _lastRemaining = Duration.zero;
   // GETX LIFECYCLE
   @override
   void onClose() {
@@ -70,6 +70,8 @@ class TimerServiceController extends GetxController {
   // COMPUTED REMAINING TIME
   /// Dynamically determines remaining time using `_endTime` and real clock
   Duration get remainingDuration {
+    // When stopped, return last frozen remaining time
+    if (_stopped) return _lastRemaining;
     // Before timer starts, return full duration
     if (_endTime.value == null) return duration;
 
@@ -110,6 +112,8 @@ class TimerServiceController extends GetxController {
 
   // Pause timer (keep remaining time unchanged, but stop ticking)
   void pause() {
+    // Capture final remaining duration before freezing
+    _lastRemaining = remainingDuration;
     _worker?.dispose();
     _worker = null;
     _stopped = true; // marks non-active state
@@ -119,8 +123,8 @@ class TimerServiceController extends GetxController {
   void resume() {
     if (remainingDuration <= Duration.zero) return;
 
-    _stopped = false;
     _endTime.value = DateTime.now().toUtc().add(remainingDuration);
+    _stopped = false;
 
     _worker?.dispose();
     _worker = ever(timerService.currentTime, (_) => _tick());
@@ -130,8 +134,15 @@ class TimerServiceController extends GetxController {
 
   // RESET TIMER
   /// Reset the timer and restart fresh
-  void reset({TimerTickCallback? onCompleted}) {
+  /// Optionally pass [newDuration] to change the timer duration
+  void reset({TimerTickCallback? onCompleted, Duration? newDuration}) {
     stop(stopWithCompletion: false);
+
+    // Update duration if provided
+    if (newDuration != null) {
+      duration = newDuration;
+    }
+
     _tickSeconds.value = 0; // full reset on manual reset
     start(onCompleted: onCompleted);
   }
@@ -139,6 +150,9 @@ class TimerServiceController extends GetxController {
   // STOP TIMER
   /// Stop ticking and freeze display at 00
   void stop({bool stopWithCompletion = true}) {
+    // Capture final remaining duration before freezing
+    _lastRemaining = remainingDuration;
+
     _worker?.dispose();
     _worker = null;
     _stopped = true;
