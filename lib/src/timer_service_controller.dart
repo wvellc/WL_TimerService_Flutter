@@ -13,7 +13,7 @@ class TimerServiceController extends GetxController {
     required this.duration,
     required this.stopAt,
     required this.precision,
-  });
+  }) : _originalDuration = duration; // Save baseline for resets
 
   // STATIC FACTORY METHOD
   /// Creates, registers & starts a timer instance
@@ -43,7 +43,9 @@ class TimerServiceController extends GetxController {
   }
 
   // VARIABLES
-  Duration duration; // total countdown length (Removed 'final' to allow reset with new duration)
+  Duration duration; // The ACTIVE session length (can be extended temporarily)
+  Duration _originalDuration; // The MASTER CONFIG (always starts from here)
+  
   final Duration stopAt; // stop threshold (if required)
   final _endTime = Rxn<DateTime>(); // when countdown finishes
   final TimerPrecision precision;
@@ -59,6 +61,7 @@ class TimerServiceController extends GetxController {
   // Optional per-second tick callback
   TimerTickCallback? _onTick;
   Duration _lastRemaining = Duration.zero;
+  
   // GETX LIFECYCLE
   @override
   void onClose() {
@@ -93,6 +96,10 @@ class TimerServiceController extends GetxController {
     _fired = false;
     _stopped = false;
 
+    // --- ALWAYS START FRESH FROM ORIGINAL ---
+    // Start cleans the slate. Extensions from previous runs are discarded.
+    duration = _originalDuration; 
+    
     _tickSeconds.value = 0; // reset tick count on fresh start
     // Notify first tick instantly (so UI/outside variable sync correctly)
     _onTick?.call(Duration.zero);
@@ -132,18 +139,41 @@ class TimerServiceController extends GetxController {
     _tick(); // immediate update
   }
 
-  // RESET TIMER
-  /// Reset the timer and restart fresh
-  /// Optionally pass [newDuration] to change the timer duration
-  void reset({TimerTickCallback? onCompleted, Duration? newDuration}) {
-    stop(stopWithCompletion: false);
+  // EXTEND TIMER
+  /// Adds extra time to the CURRENT running session only.
+  /// Does not change the _originalDuration.
+  void extendDuration(Duration extraTime) {
+    // 1. Update the active session duration
+    duration += extraTime;
 
-    // Update duration if provided
+    // 2. Adjust end time logic
+    if (isRunning) {
+      _endTime.value = _endTime.value?.add(extraTime);
+      _tick(); // force UI update
+    } else {
+      // If paused/stopped, just add to the frozen duration
+      // Note: If you call start() after this, this extension is wiped.
+      // If you call resume(), this extension is kept.
+      _lastRemaining += extraTime;
+    }
+  }
+
+  // RESET TIMER
+  /// Stops the timer and restarts it.
+  /// - If [newDuration] is provided: Updates the MASTER config (_originalDuration).
+  /// - If [newDuration] is null: Restarts using the existing MASTER config.
+  void reset({TimerTickCallback? onCompleted, Duration? newDuration}) {
+    // Force Stop
+    stop(stopWithCompletion: false);
+    
+    // Update Master Config if needed
     if (newDuration != null) {
-      duration = newDuration;
+      _originalDuration = newDuration; 
+      // Note: We don't set 'duration' here because start() does it automatically.
     }
 
-    _tickSeconds.value = 0; // full reset on manual reset
+    // Start (which will load from _originalDuration)
+    _tickSeconds.value = 0; 
     start(onCompleted: onCompleted);
   }
 
