@@ -43,7 +43,7 @@ class TimerServiceController extends GetxController {
   }
 
   // VARIABLES
-  final Duration duration; // total countdown length
+  Duration duration; // total countdown length (Removed 'final' to allow reset with new duration)
   final Duration stopAt; // stop threshold (if required)
   final _endTime = Rxn<DateTime>(); // when countdown finishes
   final TimerPrecision precision;
@@ -134,8 +134,15 @@ class TimerServiceController extends GetxController {
 
   // RESET TIMER
   /// Reset the timer and restart fresh
-  void reset({TimerTickCallback? onCompleted}) {
+  /// Optionally pass [newDuration] to change the timer duration
+  void reset({TimerTickCallback? onCompleted, Duration? newDuration}) {
     stop(stopWithCompletion: false);
+
+    // Update duration if provided
+    if (newDuration != null) {
+      duration = newDuration;
+    }
+
     _tickSeconds.value = 0; // full reset on manual reset
     start(onCompleted: onCompleted);
   }
