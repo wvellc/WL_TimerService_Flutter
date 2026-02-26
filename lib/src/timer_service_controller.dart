@@ -10,10 +10,12 @@ import 'package:timer_service_flutter/timer_service.dart';
 class TimerServiceController extends GetxController {
   // PRIVATE CONSTRUCTOR
   TimerServiceController._({
+    required String tag,
     required this.duration,
     required this.stopAt,
     required this.precision,
-  }) : _originalDuration = duration; // Save baseline for resets
+  }) : _originalDuration = duration, // Save baseline for resets
+       _tag = tag; // Unique tag for GetX registration
 
   // STATIC FACTORY METHOD
   /// Creates, registers & starts a timer instance
@@ -32,20 +34,22 @@ class TimerServiceController extends GetxController {
     else if (precision != TimerService.currentPrecision) {
       TimerService.setPrecision(precision); // <-- new helper method required in service
     }
+    final uniqueTag = duration.inSeconds.toString() + UniqueKey().toString();
     return Get.put(
       TimerServiceController._(
+        tag: uniqueTag,
         duration: duration,
         stopAt: stopAt,
         precision: precision,
       ),
-      tag: duration.inSeconds.toString() + UniqueKey().toString(), // ensures unique controller per call
+      tag: uniqueTag, // ensures unique controller per call
     );
   }
 
   // VARIABLES
   Duration duration; // The ACTIVE session length (can be extended temporarily)
   Duration _originalDuration; // The MASTER CONFIG (always starts from here)
-  
+  final String _tag; // Unique tag for GetX registration (ensures multiple timers can coexist)
   final Duration stopAt; // stop threshold (if required)
   final _endTime = Rxn<DateTime>(); // when countdown finishes
   final TimerPrecision precision;
@@ -61,7 +65,7 @@ class TimerServiceController extends GetxController {
   // Optional per-second tick callback
   TimerTickCallback? _onTick;
   Duration _lastRemaining = Duration.zero;
-  
+
   // GETX LIFECYCLE
   @override
   void onClose() {
@@ -98,8 +102,8 @@ class TimerServiceController extends GetxController {
 
     // --- ALWAYS START FRESH FROM ORIGINAL ---
     // Start cleans the slate. Extensions from previous runs are discarded.
-    duration = _originalDuration; 
-    
+    duration = _originalDuration;
+
     _tickSeconds.value = 0; // reset tick count on fresh start
     // Notify first tick instantly (so UI/outside variable sync correctly)
     _onTick?.call(Duration.zero);
@@ -165,15 +169,15 @@ class TimerServiceController extends GetxController {
   void reset({TimerTickCallback? onCompleted, Duration? newDuration}) {
     // Force Stop
     stop(stopWithCompletion: false);
-    
+
     // Update Master Config if needed
     if (newDuration != null) {
-      _originalDuration = newDuration; 
+      _originalDuration = newDuration;
       // Note: We don't set 'duration' here because start() does it automatically.
     }
 
     // Start (which will load from _originalDuration)
-    _tickSeconds.value = 0; 
+    _tickSeconds.value = 0;
     start(onCompleted: onCompleted);
   }
 
@@ -193,12 +197,7 @@ class TimerServiceController extends GetxController {
         _completion?.call(Duration(seconds: _tickSeconds.value));
       }
       // Now delete the controller here (single responsibility)
-      Future.microtask(
-        () => Get.delete<TimerServiceController>(
-          tag: hashCode.toString(),
-          force: true,
-        ),
-      );
+      Future.microtask(() => Get.delete<TimerServiceController>(tag: _tag, force: true));
     }
   }
 
