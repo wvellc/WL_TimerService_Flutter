@@ -166,9 +166,9 @@ class TimerServiceController extends GetxController {
   /// Stops the timer and restarts it.
   /// - If [newDuration] is provided: Updates the MASTER config (_originalDuration).
   /// - If [newDuration] is null: Restarts using the existing MASTER config.
-  void reset({TimerTickCallback? onCompleted, Duration? newDuration}) {
-    // Force Stop
-    stop(stopWithCompletion: false);
+  void reset({TimerTickCallback? onCompleted, Duration? newDuration,}) {
+    // keep controller alive for restart
+    stop(stopWithCompletion: false, deleteAfterStop: false);
 
     // Update Master Config if needed
     if (newDuration != null) {
@@ -218,7 +218,7 @@ class TimerServiceController extends GetxController {
 
     // Delegate finishing to stop()
     if (remainingDuration <= stopAt) {
-      stop(stopWithCompletion: true); // cleanup, completion, delete handled here
+      stop(stopWithCompletion: true, deleteAfterStop: false); // cleanup, completion, delete handled here
     }
   }
 
