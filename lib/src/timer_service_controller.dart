@@ -183,7 +183,7 @@ class TimerServiceController extends GetxController {
 
   // STOP TIMER
   /// Stop ticking and freeze display at 00
-  void stop({bool stopWithCompletion = true}) {
+  void stop({bool stopWithCompletion = true, bool deleteAfterStop = true}) {
     // Capture final remaining duration before freezing
     _lastRemaining = remainingDuration;
 
@@ -196,7 +196,10 @@ class TimerServiceController extends GetxController {
         _fired = true;
         _completion?.call(Duration(seconds: _tickSeconds.value));
       }
-      // Now delete the controller here (single responsibility)
+    }
+
+    //Delete controller after stopping to free resources (optional, based on use case)
+    if (deleteAfterStop) {
       Future.microtask(() => Get.delete<TimerServiceController>(tag: _tag, force: true));
     }
   }
