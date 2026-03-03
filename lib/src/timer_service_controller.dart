@@ -58,6 +58,7 @@ class TimerServiceController extends GetxController {
   TimerTickCallback? _completion; // completion callback
   bool _fired = false; // prevents double-callback fire
   bool _stopped = false; // NEW: ensures timer stays at 00 after stop()
+  bool _isDisposing = false; // Flag to indicate if the controller is in the process of being disposed (used to prevent completion callback on stop when deleting)
 
   // Global timer source from TimerService
   final TimerService timerService = Get.find<TimerService>();
@@ -166,7 +167,10 @@ class TimerServiceController extends GetxController {
   /// Stops the timer and restarts it.
   /// - If [newDuration] is provided: Updates the MASTER config (_originalDuration).
   /// - If [newDuration] is null: Restarts using the existing MASTER config.
-  void reset({TimerTickCallback? onCompleted, Duration? newDuration,}) {
+  void reset({
+    TimerTickCallback? onCompleted,
+    Duration? newDuration,
+  }) {
     // keep controller alive for restart
     stop(stopWithCompletion: false, deleteAfterStop: false);
 
@@ -185,17 +189,20 @@ class TimerServiceController extends GetxController {
   /// Stop ticking and freeze display at 00
   void stop({bool stopWithCompletion = true, bool deleteAfterStop = true}) {
     // Capture final remaining duration before freezing
+    if (deleteAfterStop) _isDisposing = true;
     _lastRemaining = remainingDuration;
 
     _worker?.dispose();
     _worker = null;
     _stopped = true;
 
-    if (stopWithCompletion) {
-      if (!_fired) {
-        _fired = true;
+    if (stopWithCompletion && !_isDisposing && !_fired) {
+      _fired = true;
+
+      // Wrap in microtask to ensure it fires even if the worker was just disposed
+      Future.microtask(() {
         _completion?.call(Duration(seconds: _tickSeconds.value));
-      }
+      });
     }
 
     //Delete controller after stopping to free resources (optional, based on use case)
@@ -224,7 +231,7 @@ class TimerServiceController extends GetxController {
 
   // STATE HELPERS
   /// True if actively running
-  bool get isRunning => !_stopped && _endTime.value != null && remainingDuration > Duration.zero;
+  bool get isRunning => !_stopped && !_isDisposing && _endTime.value != null && remainingDuration > Duration.zero;
 
   /// True if completely finished counting
   bool get isFinished => remainingDuration == Duration.zero;
